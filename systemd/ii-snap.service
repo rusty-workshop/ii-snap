@@ -1,0 +1,6 @@
+[Unit]
+Description=Weekly ii-snap snapshot of illogical-impulse dots
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/ii-snap snapshot
