@@ -1,7 +1,7 @@
 # ii-snap
 
 Snapshot/restore for illogical-impulse (end-4/dots-hyprland) — the
-[[caelback]] tool did this job for Caelestia, but caelback is Caelestia-
+[caelback](https://github.com/rusty-workshop/caelback) tool did this job for Caelestia, but caelback is Caelestia-
 specific and is now inactive since the move to ii. This is a from-scratch
 rebuild for the current dots, using a genuinely better foundation:
 Caelestia never shipped an installer manifest, so caelback had to
@@ -21,8 +21,7 @@ layout (same convention as caelback/livewall).
 - Plus a few files ii mutates at runtime that the installer doesn't list:
   `~/.config/illogical-impulse/config.json` (wallpaper path, theming,
   every UI toggle), `~/.config/caelestia/cli.json` (special-workspace
-  app bindings — see the illogical-impulse-dots memory note on why this
-  file matters even without Caelestia installed)
+  app bindings, which ii still reads even without Caelestia installed)
 - Symlinks are preserved as symlinks (not dereferenced) — matters for
   anything that records "which file is currently selected" via a symlink
   rather than storing the content directly

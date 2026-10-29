@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ii-snap</title>
+<meta name="description" content="ii-snap: snapshot and restore for the illogical-impulse Hyprland dots, built on the installer's own file manifest.">
+<meta property="og:title" content="ii-snap">
+<meta property="og:description" content="Snapshot your rice. Restore it whole.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='10' fill='%23d0bcff'/><circle cx='16' cy='16' r='7' fill='none' stroke='%23381e72' stroke-width='3'/><circle cx='16' cy='16' r='2.5' fill='%23381e72'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;700;900&family=Rubik:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#d0bcff; --on-primary:#381e72; --pc:#4f378b; --on-pc:#eaddff;
+    --tertiary:#efb8c8; --tc:#633b48; --on-tc:#ffd8e4;
+    --surface:#141218; --s1:#1d1b20; --s2:#211f26; --s3:#2b2930; --on-surface:#e6e0e9; --on-sv:#cac4d0; --outline:#49454f;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--surface); color:var(--on-surface); font-family:'Rubik',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; transition: background-color .8s ease, color .8s ease;}
+  body, .t{transition: background-color .8s ease, color .8s ease, border-color .8s ease, fill .8s ease;}
+  a{color:inherit;}
+  .wrap{max-width:1180px; margin:0 auto; padding-inline:clamp(16px,4vw,40px);}
+  .sym{font-family:'Material Symbols Rounded'; font-weight:normal; font-style:normal; font-size:22px; line-height:1; display:inline-block; -webkit-font-feature-settings:'liga'; font-variation-settings:'FILL' 1;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  h1,h2,h3{font-family:'Gabarito',sans-serif;}
+
+  .bar{position:sticky; top:12px; z-index:20; margin-top:12px; display:flex; justify-content:space-between; align-items:center; padding:8px 8px 8px 18px; border-radius:100px; background:color-mix(in srgb, var(--s2) 85%, transparent); backdrop-filter:blur(14px);}
+  .bar .brand{font-family:'Gabarito'; font-weight:900; font-size:1.15rem; text-decoration:none; display:flex; align-items:center; gap:10px;}
+  .bar .brand i{width:28px; height:28px; border-radius:10px; background:var(--primary); display:grid; place-items:center; color:var(--on-primary); font-style:normal; transition: border-radius .4s cubic-bezier(.34,1.56,.64,1), background .8s;}
+  .bar .brand:hover i{border-radius:50%;}
+  .bar nav{display:flex; gap:4px;}
+  .bar nav a{padding:10px 16px; border-radius:100px; text-decoration:none; font-weight:500; font-size:.92rem; transition: background .2s;}
+  .bar nav a:hover{background:color-mix(in srgb, var(--primary) 14%, transparent);}
+  .bar nav a.fill{background:var(--primary); color:var(--on-primary);}
+
+  .hero{display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; padding-block:70px 60px;}
+  .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 14px 8px 10px; border-radius:10px; background:var(--tc); color:var(--on-tc); font-size:.85rem; font-weight:500;}
+  h1{font-weight:900; font-size:clamp(3rem,7.6vw,6.6rem); line-height:.92; letter-spacing:-.035em; margin:18px 0 20px;}
+  h1 .c{color:var(--primary);}
+  .lede{font-size:1.15rem; line-height:1.6; color:var(--on-sv); max-width:46ch; margin:0 0 30px;}
+  .btns{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:16px 26px; border-radius:100px; font-weight:600; text-decoration:none; transition: border-radius .35s cubic-bezier(.34,1.56,.64,1), transform .2s;}
+  .btn:hover{border-radius:16px;}
+  .btn.f{background:var(--primary); color:var(--on-primary);}
+  .btn.t{background:var(--pc); color:var(--on-pc);}
+
+  /* wallpaper picker */
+  .picker{position:relative; aspect-ratio:1; max-width:460px; width:100%; justify-self:center;}
+  .shape{position:absolute; inset:0; animation: spin 40s linear infinite;}
+  .shape path{fill:var(--pc); transition: fill .8s ease;}
+  @keyframes spin{ to{transform:rotate(360deg);} }
+  .wall{position:absolute; inset:16%; border-radius:44px; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,.35); transition: border-radius .6s cubic-bezier(.34,1.56,.64,1);}
+  .wall:hover{border-radius:50%;}
+  .wall .img{position:absolute; inset:0; transition: opacity .8s ease;}
+  .swatches{position:absolute; left:50%; bottom:2%; transform:translateX(-50%); display:flex; gap:10px; padding:10px; border-radius:100px; background:var(--s3);}
+  .swatches button{width:38px; height:38px; border-radius:50%; border:3px solid transparent; cursor:pointer; transition: transform .25s cubic-bezier(.34,1.56,.64,1), border-color .3s;}
+  .swatches button:hover{transform:scale(1.12);}
+  .swatches button.on{border-color:var(--on-surface);}
+  .wall-label{position:absolute; top:6%; left:50%; transform:translateX(-50%); font-size:.78rem; padding:6px 12px; border-radius:100px; background:var(--s3); white-space:nowrap;}
+
+  section{padding-block:70px;}
+  .sh{font-weight:900; font-size:clamp(2.2rem,5vw,4rem); letter-spacing:-.03em; line-height:1; margin:0 0 14px;}
+  .sp{color:var(--on-sv); font-size:1.08rem; line-height:1.6; max-width:60ch; margin:0 0 36px;}
+
+  .vs{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .vcard{border-radius:28px; padding:28px; background:var(--s1);}
+  .vcard.good{background:var(--pc); color:var(--on-pc);}
+  .vcard h3{margin:0 0 10px; font-size:1.4rem; display:flex; align-items:center; gap:10px;}
+  .vcard p{margin:0 0 16px; line-height:1.6; opacity:.85;}
+  .vcard code{font-family:'JetBrains Mono'; font-size:.82rem; display:block; padding:12px 14px; border-radius:14px; background:rgba(0,0,0,.25);}
+  .count{font-family:'Gabarito'; font-weight:900; font-size:3.4rem; line-height:1;}
+
+  .term{border-radius:28px; background:#0d0c10; border:1px solid var(--outline); overflow:hidden;}
+  .term .tb{display:flex; align-items:center; gap:8px; padding:12px 16px; background:var(--s2); font-size:.82rem; color:var(--on-sv);}
+  .term .tb i{width:12px; height:12px; border-radius:50%; background:var(--primary); opacity:.6;}
+  .term pre{margin:0; padding:20px 22px; font-family:'JetBrains Mono'; font-size:.82rem; line-height:1.75; color:#ddd7e4; min-height:290px; white-space:pre-wrap;}
+  .term .p{color:var(--primary);} .term .o{color:#8f8a96;} .term .s{color:var(--tertiary);}
+  .cmds{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .cmds button{font:inherit; font-size:.85rem; font-weight:500; padding:9px 16px; border-radius:10px; border:1px solid var(--outline); background:transparent; color:var(--on-surface); cursor:pointer; transition: all .25s cubic-bezier(.34,1.56,.64,1);}
+  .cmds button.on{background:var(--primary); color:var(--on-primary); border-color:var(--primary); border-radius:100px;}
+
+  .feats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .ft{background:var(--s1); border-radius:28px; padding:24px; transition: border-radius .4s cubic-bezier(.34,1.56,.64,1), background .3s;}
+  .ft:hover{border-radius:44px 12px 44px 12px; background:var(--s2);}
+  .ft .ic{width:52px; height:52px; border-radius:16px; display:grid; place-items:center; background:var(--tc); color:var(--on-tc); margin-bottom:16px;}
+  .ft h3{margin:0 0 8px; font-size:1.2rem;} .ft p{margin:0; color:var(--on-sv); line-height:1.55; font-size:.95rem;}
+
+  .tl{display:grid; gap:10px;}
+  .snap{display:grid; grid-template-columns:auto 1fr auto auto; gap:16px; align-items:center; padding:16px 20px; border-radius:20px; background:var(--s1);}
+  .snap.star{background:var(--pc); color:var(--on-pc);}
+  .snap .dot{width:12px; height:12px; border-radius:50%; background:var(--primary);}
+  .snap b{font-family:'JetBrains Mono'; font-weight:600; font-size:.9rem;}
+  .snap span{font-size:.85rem; opacity:.75;}
+  .snap .ok{font-size:.78rem; padding:4px 10px; border-radius:100px; background:rgba(0,0,0,.2);}
+
+  pre.code{background:var(--s1); border-radius:24px; padding:22px; overflow:auto; font-family:'JetBrains Mono'; font-size:.82rem; line-height:1.7; color:var(--on-surface);}
+  pre.code .c{color:#8f8a96;}
+  footer{padding-block:40px 60px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:var(--on-sv); font-size:.9rem;}
+  footer a{color:var(--primary); text-decoration:none;}
+  .reveal{opacity:0; transform:translateY(24px) scale(.98); transition: opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1);} .reveal.in{opacity:1; transform:none;}
+
+  @media (max-width:900px){ .hero, .vs{grid-template-columns:1fr;} .feats{grid-template-columns:1fr;} .bar nav a:not(.fill){display:none;} .snap{grid-template-columns:auto 1fr; } .snap .ok, .snap > span:last-child{display:none;} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important; transition:none !important;} .reveal{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="brand" href="#"><i class="sym" style="font-size:18px">camera</i>ii-snap</a>
+    <nav><a href="#why">Why</a><a href="#try">Commands</a><a href="#install">Install</a><a class="fill" href="https://github.com/rusty-workshop/ii-snap">GitHub</a></nav>
+  </div>
+
+  <div class="hero">
+    <div>
+      <span class="chip"><span class="sym" style="font-size:18px">auto_awesome</span>for illogical-impulse dots</span>
+      <h1>Snapshot your rice.<br><span class="c">Restore it whole.</span></h1>
+      <p class="lede">ii-snap takes complete snapshots of an end-4 illogical-impulse Hyprland setup, every config, font and toggle, and puts it all back exactly as it was when a dothop or a bad edit goes sideways.</p>
+      <div class="btns"><a class="btn f" href="https://github.com/rusty-workshop/ii-snap"><span class="sym">download</span>Get ii-snap</a><a class="btn t" href="#try"><span class="sym">terminal</span>See it run</a></div>
+    </div>
+    <div class="picker">
+      <svg class="shape" viewBox="0 0 200 200"><path id="snapCookie"/></svg>
+      <div class="wall"><div class="img" id="wallImg"></div></div>
+      <div class="wall-label" id="wallLabel">tap a wallpaper</div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+  </div>
+</div>
+
+<section class="wrap" id="why">
+  <h2 class="sh reveal">Ground truth,<br>not guesses.</h2>
+  <p class="sp reveal">Older snapshot tools had to guess which files belonged to a setup by scanning for paths that looked right. ii's installer writes down every file it installs. ii-snap simply reads that list.</p>
+  <div class="vs">
+    <div class="vcard reveal"><h3><span class="sym">help</span>Guessing</h3><p>Walk your home folder and keep anything whose path contains the setup's name. Misses things, grabs strays, and you never quite know which.</p><code>find ~ -path '*caelestia*'</code></div>
+    <div class="vcard good reveal"><h3><span class="sym">verified</span>Reading the manifest</h3><p>Every file listed in the installer's own manifest that exists on disk, plus the few files ii changes at runtime that the installer doesn't list.</p><code>~/.config/illogical-impulse/installed_listfile</code><div class="count" style="margin-top:16px">1,174 <span style="font-size:1rem; font-weight:500">files, every one accounted for</span></div></div>
+  </div>
+</section>
+
+<section class="wrap" id="try">
+  <h2 class="sh reveal">Try a command.</h2>
+  <p class="sp reveal">Stdlib-only Python, nothing to configure. Snapshots live in <span class="mono">~/Backups/ii-snap</span>.</p>
+  <div class="cmds" id="cmdBtns"></div>
+  <div class="term reveal"><div class="tb"><i></i>fish · ~</div><pre id="termOut"></pre></div>
+</section>
+
+<section class="wrap">
+  <h2 class="sh reveal">Careful by default.</h2>
+  <div class="feats" style="margin-top:30px">
+    <div class="ft reveal"><div class="ic"><span class="sym">shield</span></div><h3>Restore never deletes</h3><p>Anything about to be overwritten is moved aside to <span class="mono">.pre-restore-&lt;time&gt;</span> first, with collision-safe names.</p></div>
+    <div class="ft reveal"><div class="ic"><span class="sym">stethoscope</span></div><h3>doctor</h3><p>Checks a snapshot's own files for corruption, and restore refuses a damaged snapshot unless you insist.</p></div>
+    <div class="ft reveal"><div class="ic"><span class="sym">compare_arrows</span></div><h3>diff-live</h3><p>See exactly what changed between a snapshot and your system right now, before touching anything.</p></div>
+    <div class="ft reveal"><div class="ic"><span class="sym">star</span></div><h3>Star a good one</h3><p>Pin a known-good snapshot so it's the default for show, diff and restore.</p></div>
+    <div class="ft reveal"><div class="ic"><span class="sym">link</span></div><h3>Symlinks stay symlinks</h3><p>Things that remember "which file is selected" with a link keep working after a restore.</p></div>
+    <div class="ft reveal"><div class="ic"><span class="sym">schedule</span></div><h3>Weekly timer</h3><p>A systemd user timer takes a snapshot every week and prunes beyond the newest ten.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="sh reveal">Your snapshots.</h2>
+  <div class="tl" style="margin-top:28px">
+    <div class="snap star reveal"><span class="sym">star</span><b>2026-10-25_090000</b><span>1,174 files · weekly</span><span class="ok">doctor ✓</span></div>
+    <div class="snap reveal"><i class="dot"></i><b>2026-10-18_090000</b><span>1,172 files · weekly</span><span class="ok">doctor ✓</span></div>
+    <div class="snap reveal"><i class="dot"></i><b>2026-10-14_221503</b><span>1,172 files · before a dothop</span><span class="ok">doctor ✓</span></div>
+    <div class="snap reveal"><i class="dot"></i><b>2026-10-11_090000</b><span>1,170 files · weekly</span><span class="ok">doctor ✓</span></div>
+  </div>
+</section>
+
+<section class="wrap" id="install">
+  <h2 class="sh reveal">Install.</h2>
+<pre class="code reveal">git clone https://github.com/rusty-workshop/ii-snap && cd ii-snap
+uv tool install --editable .
+ii-snap snapshot            <span class="c"># first snapshot</span>
+ii-snap star "$(ii-snap list | tail -1)"
+<span class="c"># weekly snapshots</span>
+cp systemd/ii-snap.{service,timer} ~/.config/systemd/user/
+systemctl --user enable --now ii-snap.timer</pre>
+</section>
+
+<footer class="wrap">
+  <span>ii-snap is AGPL-3.0-or-later. For <a href="https://github.com/end-4/dots-hyprland">end-4/dots-hyprland</a>, not affiliated.</span>
+  <span>Made by <a href="https://rusty.is-a.dev">Rusty</a> · <a href="https://github.com/rusty-workshop/ii-snap">GitHub ↗</a></span>
+</footer>
+
+<script>
+(function(){
+  // ---- material "cookie" shape ----
+  var pts = [], N = 12;
+  for (var i = 0; i <= 360; i += 2){
+    var a = i * Math.PI / 180, r = 92 + 6 * Math.cos(N * a);
+    pts.push((100 + r * Math.cos(a)).toFixed(2) + ' ' + (100 + r * Math.sin(a)).toFixed(2));
+  }
+  document.getElementById('snapCookie').setAttribute('d', 'M' + pts.join(' L') + 'Z');
+
+  // ---- wallpaper-driven dynamic color, like ii does ----
+  var THEMES = [
+    {name:'violet dusk', img:'radial-gradient(circle at 30% 30%,#b69cff,transparent 55%),radial-gradient(circle at 70% 75%,#ff8fb1,transparent 55%),linear-gradient(135deg,#2a1b4d,#59306b)',
+     v:{primary:'#d0bcff','on-primary':'#381e72',pc:'#4f378b','on-pc':'#eaddff',tertiary:'#efb8c8',tc:'#633b48','on-tc':'#ffd8e4',surface:'#141218',s1:'#1d1b20',s2:'#211f26',s3:'#2b2930','on-surface':'#e6e0e9','on-sv':'#cac4d0',outline:'#49454f'}},
+    {name:'forest morning', img:'radial-gradient(circle at 25% 35%,#9fe0a5,transparent 55%),radial-gradient(circle at 75% 70%,#f2d27a,transparent 50%),linear-gradient(160deg,#16301f,#2e5a3a)',
+     v:{primary:'#93d7a0','on-primary':'#003916',pc:'#1d5130','on-pc':'#aef3bb',tertiary:'#a3cddb',tc:'#224c58','on-tc':'#bfe9f8',surface:'#0f1510',s1:'#171d18',s2:'#1b211c',s3:'#252b26','on-surface':'#dfe4dc','on-sv':'#c0c9bf',outline:'#414941'}},
+    {name:'ocean blue', img:'radial-gradient(circle at 70% 30%,#7fd3ff,transparent 55%),radial-gradient(circle at 25% 75%,#6b7bff,transparent 55%),linear-gradient(135deg,#0b1f3d,#123a66)',
+     v:{primary:'#a2c9ff','on-primary':'#00315c',pc:'#1c4a7f','on-pc':'#d3e4ff',tertiary:'#d7bde4',tc:'#533f5f','on-tc':'#f3daff',surface:'#101418',s1:'#181c21',s2:'#1c2025',s3:'#272a2f','on-surface':'#e0e2e8','on-sv':'#c3c6cf',outline:'#43474e'}},
+    {name:'ember sunset', img:'radial-gradient(circle at 35% 30%,#ffb68a,transparent 55%),radial-gradient(circle at 70% 75%,#ff6f6f,transparent 50%),linear-gradient(150deg,#3d1a12,#6b2a1f)',
+     v:{primary:'#ffb59a','on-primary':'#5a1b04',pc:'#7a2f16','on-pc':'#ffdbce',tertiary:'#d8c58e',tc:'#504519','on-tc':'#f5e1a7',surface:'#1a110e',s1:'#231915',s2:'#271d19',s3:'#322823','on-surface':'#f1dfd9','on-sv':'#d8c2bb',outline:'#53433e'}}
+  ];
+  var sw = document.getElementById('swatches'), img = document.getElementById('wallImg'), label = document.getElementById('wallLabel');
+  function apply(i){
+    var t = THEMES[i];
+    Object.keys(t.v).forEach(function(k){ document.documentElement.style.setProperty('--' + k, t.v[k]); });
+    img.style.background = t.img; label.textContent = 'wallpaper: ' + t.name;
+    [].forEach.call(sw.children, function(b, k){ b.classList.toggle('on', k === i); });
+  }
+  THEMES.forEach(function(t, i){
+    var b = document.createElement('button'); b.type = 'button'; b.style.background = t.img; b.setAttribute('aria-label', t.name);
+    b.addEventListener('click', function(){ apply(i); }); sw.appendChild(b);
+  });
+  apply(0);
+
+  // ---- fake terminal ----
+  var CMDS = {
+    'snapshot':[['p','❯ ii-snap snapshot'],['o','reading installed_listfile ... 1,170 entries'],['o','+ runtime files: config.json, cli.json'],['o','skipping .git internals in vendored fonts'],['s','✓ 2026-10-28_221530  1,174 files  12.4 MB'],['o','pruned 1 old snapshot (keeping 10)']],
+    'list':[['p','❯ ii-snap list'],['s','* 2026-10-25_090000   1,174 files'],['o','  2026-10-18_090000   1,172 files'],['o','  2026-10-14_221503   1,172 files'],['o','  2026-10-11_090000   1,170 files']],
+    'diff-live':[['p','❯ ii-snap diff-live'],['o','comparing 2026-10-25_090000 (starred) with your system'],['s','~ .config/hypr/custom/keybinds.conf'],['s','~ .config/illogical-impulse/config.json'],['s','+ .config/hypr/custom/rules.conf'],['o','3 differences, nothing missing']],
+    'doctor':[['p','❯ ii-snap doctor --all'],['o','checking 4 snapshots ...'],['s','✓ 2026-10-25_090000  1,174 / 1,174 intact'],['s','✓ 2026-10-18_090000  1,172 / 1,172 intact'],['s','✓ 2026-10-14_221503  1,172 / 1,172 intact'],['s','✓ 2026-10-11_090000  1,170 / 1,170 intact']],
+    'restore':[['p','❯ ii-snap restore --dry-run'],['o','would restore 2026-10-25_090000 (starred)'],['o','~ keybinds.conf  → moved aside to .pre-restore-20261028-221602'],['o','~ config.json    → moved aside to .pre-restore-20261028-221602'],['o','+ rules.conf left alone (not in the snapshot)'],['s','dry run: nothing changed. drop --dry-run to do it.']]
+  };
+  var out = document.getElementById('termOut'), btns = document.getElementById('cmdBtns'), typing = null;
+  function run(name){
+    [].forEach.call(btns.children, function(b){ b.classList.toggle('on', b.textContent === name); });
+    clearTimeout(typing); out.innerHTML = '';
+    var lines = CMDS[name], li = 0, ci = 0, cur = null;
+    (function step(){
+      if (li >= lines.length) return;
+      if (!cur){ cur = document.createElement('span'); cur.className = lines[li][0]; out.appendChild(cur); }
+      var txt = lines[li][1];
+      if (li === 0 && ci < txt.length){ cur.textContent = txt.slice(0, ++ci); typing = setTimeout(step, 28); return; }
+      cur.textContent = txt; out.appendChild(document.createTextNode('\n')); li++; ci = 0; cur = null;
+      typing = setTimeout(step, li === 1 ? 260 : 140);
+    })();
+  }
+  Object.keys(CMDS).forEach(function(k){ var b = document.createElement('button'); b.type = 'button'; b.textContent = k; b.addEventListener('click', function(){ run(k); }); btns.appendChild(b); });
+
+  var started = false;
+  var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add('in'); if (en.target.classList.contains('term') && !started){ started = true; run('snapshot'); } io.unobserve(en.target); } }); }, {threshold:.15});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>
